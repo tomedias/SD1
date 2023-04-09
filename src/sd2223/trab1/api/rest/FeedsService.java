@@ -40,7 +40,7 @@ public interface FeedsService {
 	 * @param pwd password of the user sending the message
 	 * @return	200 the unique numerical identifier for the posted message;
 	 *			403 if the publisher does not exist in the current domain or if the pwd is not correct
-	 *			409 otherwise
+	 *			400 otherwise
 	 */
 	@POST
 	@Path("/{" + USER + "}")
@@ -56,7 +56,7 @@ public interface FeedsService {
 	 * @param user user feed being accessed (format user@domain)
 	 * @param mid the identifier of the message to be deleted
 	 * @param pwd password of the user
-	 * @return	204 if ok
+	 * @return	204 if ok;
 	 * 			403 if the user does not exist or if the pwd is not correct;
 	 * 			404 is generated if the message does not exist in the server.
 	 */
@@ -65,13 +65,13 @@ public interface FeedsService {
 	void removeFromPersonalFeed(@PathParam(USER) String user, @PathParam(MID) long mid, @QueryParam(PWD) String pwd);
 
 	/**
-	 * Obtains the message with id from the feed of user (may be a remote user)
+	 * Obtains the message with id from the feed of user (might be a remote user)
 	 * 
 	 * @param user user feed being accessed (format user@domain)
 	 * @param mid id of the message
 	 *
 	 * @return	200 the message if it exists;
-	 *			404 if the user or the message does not exists
+	 *			404 if the user or the message does not exist
 	 */
 	@GET
 	@Path("/{" + USER + "}/{" + MID + "}")
@@ -111,7 +111,7 @@ public interface FeedsService {
 	void subUser(@PathParam(USER) String user, @PathParam(USERSUB) String userSub, @QueryParam(PWD) String pwd);
 
 	/**
-	 * UnSubscribe a user
+	 * UnSubscribe a user;
 	 * A user must contact the server of her domain directly (i.e., this operation should not be
 	 * propagated to other domain)
 	 *
@@ -140,6 +140,9 @@ public interface FeedsService {
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
 }
+
+
+
 
 class FeedsSystem implements FeedsService{
 
