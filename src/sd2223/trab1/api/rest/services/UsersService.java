@@ -1,10 +1,6 @@
-package sd2223.trab1.api.rest;
+package sd2223.trab1.api.rest.services;
 
-import java.util.logging.*;
-
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -15,9 +11,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response.Status;
 import sd2223.trab1.api.User;
 
 @Path(UsersService.PATH)
@@ -105,84 +99,3 @@ public interface UsersService {
 
 
 
-class UsersSystem implements UsersService{
-
-
-	private final Map<String,User> users = new HashMap<String,User>();
-
-	/**
-	 *
-	 */
-	private static final Logger log = Logger.getLogger(UsersSystem.class.getName());
-
-
-	
-
-	@Override
-	public String createUser(User user) {
-		
-		if(users.containsKey(user.getName())){
-			throw new WebApplicationException(Status.CONFLICT);
-		}
-		if(user.getPwd() ==null || user.getDisplayName()==null || user.getDomain()==null || user.getName()==null){
-			throw new WebApplicationException(Status.BAD_REQUEST);
-        }
-		users.put(user.getName(),user);
-		throw new WebApplicationException(Status.OK);
-	}
-
-	@Override
-	public User getUser(String name, String pwd) {
-		User user = users.get(name);
-		if(user==null){
-			throw new WebApplicationException(Status.NOT_FOUND);
-		}
-		if(!user.getPwd().equals(pwd)){
-			throw new WebApplicationException(Status.FORBIDDEN);
-        }
-		return user;
-	}
-
-	@Override
-	public User updateUser(String name, String pwd, User user) {
-		User u = users.get(name);
-        if(u==null){
-            throw new WebApplicationException(Status.NOT_FOUND);
-        }
-        if(!u.getPwd().equals(pwd)){
-            throw new WebApplicationException(Status.FORBIDDEN);
-        }
-        u.setName(user.getName());
-        u.setPwd(user.getPwd());
-        u.setDisplayName(user.getDisplayName());
-        u.setDomain(user.getDomain());
-        return u;
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public User deleteUser(String name, String pwd) {
-		User u = users.get(name);
-        if(u==null){
-            throw new WebApplicationException(Status.NOT_FOUND);
-        }
-        if(!u.getPwd().equals(pwd)){
-            throw new WebApplicationException(Status.FORBIDDEN);
-        }
-        users.remove(name);
-        return u;
-	}
-
-	@Override
-	public List<User> searchUsers(String pattern) {
-
-		List<User> result = new java.util.ArrayList<User>();
-		for(User u : users.values()){
-            if(u.getName().toLowerCase().contains(pattern.toLowerCase())){
-                result.add(u);
-            }
-        }
-		return result;
-	}
-
-}
