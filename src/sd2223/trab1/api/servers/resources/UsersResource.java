@@ -4,6 +4,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.rest.services.UsersService;
+import sd2223.trab1.api.servers.UsersServer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +39,7 @@ public class UsersResource implements UsersService {
             Log.info("User already exists.");
             throw new WebApplicationException( Response.Status.CONFLICT );
         }
-        return user.getName();
+        return String.format("%s@%s",user.getName(), UsersServer.getDomain());
     }
 
     @Override

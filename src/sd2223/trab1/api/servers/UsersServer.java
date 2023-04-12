@@ -12,6 +12,7 @@ import sd2223.trab1.api.servers.resources.UsersResource;
 public class UsersServer {
 
     private static Logger Log = Logger.getLogger(UsersServer.class.getName());
+    private static Discovery discovery = Discovery.getInstance();
 
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -19,23 +20,40 @@ public class UsersServer {
     }
 
     public static final int PORT = 8080;
-    public static final String SERVICE = "UsersService";
+    public static final String SERVICE = "users";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
+
+    private static String domain;
+
+
 
     public static void main(String[] args) {
         try {
+
+            try{
+                domain = args[0];
+            }catch(Exception e){
+                Log.severe(e.getMessage());
+            }
 
             ResourceConfig config = new ResourceConfig();
             config.register(UsersResource.class);
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
+
             JdkHttpServerFactory.createHttpServer( URI.create(serverURI), config);
+
+            discovery.announce(domain,SERVICE,serverURI);
 
             Log.info(String.format("%s Server ready @ %s\n",  SERVICE, serverURI));
 
         } catch( Exception e) {
             Log.severe(e.getMessage());
         }
+    }
+
+    public static String getDomain() {
+        return domain;
     }
 }
