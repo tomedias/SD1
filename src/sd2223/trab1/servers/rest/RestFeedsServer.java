@@ -41,6 +41,9 @@ public class RestFeedsServer {
             JdkHttpServerFactory.createHttpServer( URI.create(serverURI), config);
 
             discovery.announce(domain,SERVICE,serverURI);
+
+
+
             Log.info(String.format("%s Server ready @ %s\n",  SERVICE, serverURI));
 
         } catch( Exception e) {

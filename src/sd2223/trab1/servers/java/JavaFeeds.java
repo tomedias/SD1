@@ -18,6 +18,7 @@ import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.api.rest.UsersService;
 import sd2223.trab1.clients.rest.RestClient;
 import sd2223.trab1.clients.rest.RestUsersClient;
+import sd2223.trab1.servers.rest.RestUsersResource;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -34,171 +35,226 @@ public class JavaFeeds implements Feeds {
 
     private static Logger Log = Logger.getLogger(JavaFeeds.class.getName());
 
+    private static int id =0;
     Discovery discovery = Discovery.getInstance();
 
     @Override
     public Result<Long> postMessage(String user, String pwd, Message msg) {
-        Log.info("Posting Message");
+        Log.info("Posting Message to feed");
         if(user==null || pwd==null || msg==null){
             Log.info("UserId or password null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
-        String[] parts = user.split("@");
-        String userID = parts[0];
-        String domain = parts[1];
-        if(!checkUser(userID, domain,pwd)){
+        if(!checkUserExist(user)){
+            Log.info("User does not exist");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
+        if(!checkUser(user,pwd)){
             Log.info("Password or domain is incorrect.");
             return Result.error(ErrorCode.FORBIDDEN);
         }
 
-        HashMap<Long, Message> userFeed = feeds.get(userID);
-        userFeed.put(msg.getId(), msg);
+        msg.setId(id++);
+        HashMap<Long, Message> userFeed = feeds.get(user);
+        if(userFeed ==null){
+            userFeed= new HashMap<Long, Message>();
+            userFeed.put(msg.getId(), msg);
+            feeds.put(user, userFeed);
+        }else{
+            userFeed.put(msg.getId(), msg);
+        }
+
         return Result.ok(msg.getId());
     }
 
     @Override
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
+        Log.info("Removing message from feed");
         if(user==null || pwd==null){
             Log.info("UserId or password null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
-        String[] parts = user.split("@");
-        String userID = parts[0];
-        String domain = parts[1];
-        if(!checkUser(userID, domain,pwd)){
+        if(!checkUserExist(user)){
+            Log.info("User does not exist");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
+        if(!checkUser(user,pwd)){
             Log.info("Password or domain is incorrect.");
             return Result.error(ErrorCode.FORBIDDEN);
         }
         HashMap<Long, Message> userFeed = feeds.get(user);
-        Message message = userFeed.remove(mid);
-
-        if(message ==null){
-            Log.info("Message does not exist");
-            return Result.error(ErrorCode.NOT_FOUND);
+        Message message;
+        if(userFeed!=null) {
+            message = userFeed.remove(mid);
+            if (message == null) {
+                Log.info("Message does not exist");
+                return Result.error(ErrorCode.NOT_FOUND);
+            }
         }
+
+
         return Result.ok();
     }
 
     @Override
     public Result<Message> getMessage(String user, long mid) {
+        Log.info("Getting Message from feed");
         if(user==null){
             Log.info("UserId null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
-        String[] parts = user.split("@");
-        String userID = parts[0];
-        String domain = parts[1];
-        if(!checkUserExist(domain,userID)){
+        if(!checkUserExist(user)){
             Log.info("User does not exist");
             return Result.error(ErrorCode.NOT_FOUND);
         }
-        HashMap<Long, Message> userFeed = feeds.get(user);
-        Message message = userFeed.get(mid);
-        if(message ==null){
-            Log.info("Message does not exist");
-            return Result.error(ErrorCode.NOT_FOUND);
-        }
+        List<Message> messages = getAllFeedMessaged(user).stream().filter(m->m.getId()==mid).toList();
+        if(messages.isEmpty()) {return Result.error(ErrorCode.NOT_FOUND);}
 
-        return Result.ok(message);
+
+        else
+            return Result.ok(messages.get(0));
     }
 
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
+        Log.info("Getting Messages from feed than are HOUR: " + time);
         if(user==null){
             Log.info("UserId null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
-        String[] parts = user.split("@");
-        String userID = parts[0];
-        String domain = parts[1];
-        if(!checkUserExist(domain,userID)){
+        if(!checkUserExist(user)){
             Log.info("User does not exist");
             return Result.error(ErrorCode.NOT_FOUND);
         }
+
+        List<Message> list = getAllFeedMessaged(user).stream().filter(m->m.getCreationTime()>time).toList();
+        return Result.ok(list);
+    }
+
+    private List<Message> getAllFeedMessaged(String user){
+        Log.info("Getting All Messages from all feeds subscribed");
         HashMap<Long, Message> userFeed = feeds.get(user);
-        return Result.ok(userFeed.values().stream().filter(m -> System.currentTimeMillis()-m.getCreationTime() < time).toList());
+        List<Message> list = new ArrayList<>();
+        if(userFeed!=null){
+            list.addAll(userFeed.values().stream().toList());
+        }
+        if(subs.get(user)!=null){
+            for(String u : subs.get(user)){
+                if(feeds.get(u)!=null && checkUserExist(u)){
+                    list.addAll(feeds.get(u).values().stream().toList());
+                }
+            }
+        }
+
+        return list;
     }
 
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
+        Log.info(user +" subscribed to " + userSub);
         if(user== null || userSub==null || pwd==null){
             Log.info("UserId or password are null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
-        String[] parts = user.split("@");
-        String userID = parts[0];
-        String domain = parts[1];
-        String[] parts2 = user.split("@");
-        String userIDSub = parts2[0];
-        String domainSub = parts2[1];
-        if(!checkUser(userIDSub, domain,pwd)){
-            Log.info("User or password dont match or exist");
-            return Result.error(ErrorCode.FORBIDDEN);
-        }
-        if(!checkUserExist(domainSub,userIDSub)){
+        if(!checkUserExist(userSub) || !checkUserExist(user)){
             Log.info("UserSub does not exist");
             return Result.error(ErrorCode.NOT_FOUND);
         }
-        List<String> list = subs.get(userID);
+        if(!checkUser(user,pwd)){
+            Log.info("User or password dont match or exist");
+            return Result.error(ErrorCode.FORBIDDEN);
+        }
+
+        List<String> list = subs.get(user);
         if(list==null){
             list = new ArrayList<String>();
+            list.add(userSub);
+            subs.put(user,list);
+        }else{
+            if(!list.contains(userSub))
+                list.add(userSub);
         }
-        list.add(userIDSub);
+
         return Result.ok();
     }
 
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
+        Log.info(user +" unsubscribed to " + userSub);
         if(user== null || userSub==null || pwd==null){
             Log.info("UserId or password are null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
-        String[] parts = user.split("@");
-        String userID = parts[0];
-        String domain = parts[1];
-        String[] parts2 = user.split("@");
-        String userIDSub = parts2[0];
-        String domainSub = parts2[1];
-        if(!checkUser(userIDSub, domain,pwd)){
+        if(!checkUserExist(userSub) || !checkUserExist(user)){
+            Log.info("UserSub does not exist");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
+        if(!checkUser(user,pwd)){
             Log.info("User or password dont match or exist");
             return Result.error(ErrorCode.FORBIDDEN);
         }
 
-        List<String> list = subs.get(userID);
-        if(!list.remove(userIDSub)){
-            return Result.error(ErrorCode.NOT_FOUND);
+        List<String> list = subs.get(user);
+
+        if(list!=null) {
+            if (!list.remove(userSub)) {
+                return Result.error(ErrorCode.NOT_FOUND);
+            }
         }
         return Result.ok();
     }
 
     @Override
     public Result<List<String>> listSubs(String user) {
+        Log.info("listing subs");
         String[] parts = user.split("@");
         String userID = parts[0];
         String domain = parts[1];
-        if(!checkUserExist(domain, userID)){
-            Log.info("User dont exist");
-            return Result.error(ErrorCode.FORBIDDEN);
+        if(!checkUserExist(user) ){
+            Log.info("User does not exist");
+            return Result.error(ErrorCode.NOT_FOUND);
         }
-        return Result.ok(subs.get(userID));
+        subs.computeIfAbsent(user, k -> new ArrayList<>());
+        List<String> list =subs.get(user);
+        list.removeIf(u -> !checkUserExist(u));
+        return Result.ok(list);
     }
 
 
 
-    private boolean checkUser(String user,String domain,String password) {
-        Log.info("Sending request to user server");
+    private boolean checkUser(String user,String password) {
+        //Log.info("Sending request to user server");
+        String[] path = user.split("@");
+        String domain = path[1];
+        String userID= path[0];
         URI uri = discovery.knownUrisOf(domain,"users");
-        Log.info("Found uri: " + uri.toString());
         RestUsersClient client = new RestUsersClient(uri);
-        Log.info("Successful connection: " + client);
-        return client.getUser(user,password).isOK();
+        Result<User> r = client.getUser(userID,password);
+        if(r!=null){
+            return r.isOK();
+        }
+        return false;
     }
 
-    private boolean checkUserExist(String domain,String user){
-        Log.info("Sending request to user server");
+    private boolean checkUserExist(String user){
+        //Log.info("Sending request to user server");
+        String[] path = user.split("@");
+        String domain = path[1];
+        String userID= path[0];
         URI uri = discovery.knownUrisOf(domain,"users");
-        Log.info("Found uri: " + uri.toString());
+        //Log.info("Found uri: " + uri.toString());
         RestUsersClient client = new RestUsersClient(uri);
-        return client.searchUsers(user).isOK();
+        Result<List<User>> r = client.searchUsers(userID);
+        List<User> users = r.value();
+        if(r.isOK()){
+            for (User userC : users) {
+                //Log.info("Found user: " + userC.getName());
+                if(userC.getName().equals(userID))
+                    return true;
+            }
+        }
+        return false;
     }
+
+
 }

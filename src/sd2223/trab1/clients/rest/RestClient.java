@@ -66,7 +66,20 @@ public class RestClient {
 				return ok(r.readEntity(entityType));
 			else 
 				if( status == Status.NO_CONTENT) return ok();
-			
+			Log.info(status.toString());
+			return error(getErrorCodeFrom(status.getStatusCode()));
+		} finally {
+			r.close();
+		}
+	}
+	protected <T> Result<T> listToJavaResult(Response r, GenericType<T> entityType) {
+		try {
+			var status = r.getStatusInfo().toEnum();
+			if (status == Status.OK && r.hasEntity())
+				return ok(r.readEntity(entityType));
+			else
+			if( status == Status.NO_CONTENT) return ok();
+			Log.info(status.toString());
 			return error(getErrorCodeFrom(status.getStatusCode()));
 		} finally {
 			r.close();

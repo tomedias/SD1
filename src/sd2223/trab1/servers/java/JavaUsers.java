@@ -102,6 +102,7 @@ public class JavaUsers implements Users {
 
 	@Override
 	public Result<User> deleteUser(String name, String pwd) {
+		Log.info("Deleting user " + name);
 		if(name == null || pwd == null) {
 			Log.info("Name or Password null.");
 			return Result.error( ErrorCode.BAD_REQUEST);
