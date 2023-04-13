@@ -1,4 +1,4 @@
-package sd2223.trab1.api.rest.services;
+package sd2223.trab1.api.rest;
 
 import java.util.List;
 

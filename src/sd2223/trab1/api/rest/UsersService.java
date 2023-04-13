@@ -1,4 +1,4 @@
-package sd2223.trab1.api.rest.services;
+package sd2223.trab1.api.rest;
 
 import java.util.List;
 
@@ -94,6 +94,10 @@ public interface UsersService {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	List<User> searchUsers(@QueryParam(QUERY) String pattern);
+
+	@GET
+	@Path("/{" + NAME+ "}/" + PWD)
+	void verifyPassword(@PathParam(NAME) String name, @QueryParam(PWD) String pwd);
 }
 
 

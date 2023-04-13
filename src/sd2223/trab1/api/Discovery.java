@@ -1,4 +1,4 @@
-package sd2223.trab1.api.servers;
+package sd2223.trab1.api;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,7 +7,6 @@ import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -80,8 +79,8 @@ class DiscoveryImpl implements Discovery {
 
 	@Override
 	public void announce(String domain , String serviceName, String serviceURI) {
-		Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR, serviceName,
-				serviceURI));
+		//Log.info(String.format("Starting Discovery announcements on: %s for: %s -> %s\n", DISCOVERY_ADDR, serviceName,
+				//serviceURI));
 
 		var pktBytes = String.format("%s:%s%s%s", domain,serviceName, DELIMITER, serviceURI).getBytes();
 		var pkt = new DatagramPacket(pktBytes, pktBytes.length, DISCOVERY_ADDR);
@@ -110,8 +109,8 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	private void startListener() {
-		Log.info(String.format("Starting discovery on multicast group: %s, port: %d\n", DISCOVERY_ADDR.getAddress(),
-				DISCOVERY_ADDR.getPort()));
+		//Log.info(String.format("Starting discovery on multicast group: %s, port: %d\n", DISCOVERY_ADDR.getAddress(),
+				//DISCOVERY_ADDR.getPort()));
 
 		new Thread(() -> {
 			try (var ms = new MulticastSocket(DISCOVERY_ADDR.getPort())) {
@@ -122,22 +121,25 @@ class DiscoveryImpl implements Discovery {
 						ms.receive(pkt);
 
 						String msg = new String(pkt.getData(), 0, pkt.getLength());
-						Log.info(String.format("Received: %s", msg));
+						//Log.info(String.format("Received: %s", msg));
 
 						String[] parts = msg.split(DELIMITER);
 
 
-						if (parts.length == 5) {
+
 							// TODO: complete by storing the decoded announcements...
-							String domain = parts[0];
-							String serviceName = parts[2];
-							URI uri = URI.create(parts[3]);
-
-							Domain domains = new Domain(domain,serviceName);
-							knownUris.put(domains,uri);
-
-
+						if(parts.length==2) {
+							String[] domainService = parts[0].split(":");
+							if(domainService.length==2){
+								String domain = domainService[0];
+								String serviceName = domainService[1];
+								URI uri = URI.create(parts[1]);
+								Domain domains = new Domain(domain, serviceName);
+								knownUris.put(domains, uri);
+							}
 						}
+
+
 
 					} catch (Exception x) {
 						x.printStackTrace();
