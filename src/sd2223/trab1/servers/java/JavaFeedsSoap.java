@@ -272,6 +272,7 @@ public class JavaFeedsSoap implements Feeds {
             Log.info("UserId or password are null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
+
         if(!checkUserExist(userSub) || !checkUserExist(user)){
             Log.info("UserSub does not exist");
             return Result.error(ErrorCode.NOT_FOUND);
