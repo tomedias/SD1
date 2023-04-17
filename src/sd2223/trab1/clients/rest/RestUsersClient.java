@@ -1,23 +1,16 @@
 package sd2223.trab1.clients.rest;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.GenericType;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.java.Result;
 
-import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
 
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import sd2223.trab1.servers.java.JavaFeeds;
-import sd2223.trab1.servers.rest.RestUsersServer;
 
 import java.net.URI;
 import java.util.List;
@@ -28,7 +21,7 @@ public class RestUsersClient extends RestClient implements Users {
 
 	 final WebTarget target;
 
-	private static Logger Log = Logger.getLogger(RestUsersClient.class.getName());
+
 
 	public RestUsersClient( URI serverURI ) {
 		super( serverURI );

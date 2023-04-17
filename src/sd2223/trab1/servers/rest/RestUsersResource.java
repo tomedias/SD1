@@ -1,7 +1,5 @@
 package sd2223.trab1.servers.rest;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.rest.UsersService;
@@ -16,7 +14,7 @@ public class RestUsersResource extends RestResource implements UsersService {
 
     final Users impl;
     public RestUsersResource() {
-        this.impl = new JavaUsers();
+        this.impl = new JavaUsers(RestUsersServer.getDomain());
     }
     private final Map<String, User> users = new HashMap<String, User>();
 

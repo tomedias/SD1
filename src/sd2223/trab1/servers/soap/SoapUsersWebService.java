@@ -6,7 +6,7 @@ import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.soap.UsersException;
 import sd2223.trab1.api.soap.UsersService;
 import jakarta.jws.WebService;
-import sd2223.trab1.servers.java.JavaUsersSoap;
+import sd2223.trab1.servers.java.JavaUsers;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -20,7 +20,7 @@ public class SoapUsersWebService extends SoapWebService<UsersException> implemen
 	final Users impl;
 	public SoapUsersWebService() {
 		super( (result)-> new UsersException( result.error().toString()));
-		this.impl = new JavaUsersSoap();
+		this.impl = new JavaUsers(SoapUsersServer.getDomain());
 	}
 
 	@Override

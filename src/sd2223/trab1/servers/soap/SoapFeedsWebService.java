@@ -3,18 +3,14 @@ package sd2223.trab1.servers.soap;
 import jakarta.jws.WebService;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
-import sd2223.trab1.api.java.Result;
 
 import sd2223.trab1.api.soap.FeedsException;
 import sd2223.trab1.api.soap.FeedsService;
-import sd2223.trab1.api.soap.UsersException;
-
 import sd2223.trab1.servers.java.JavaFeeds;
-import sd2223.trab1.servers.java.JavaFeedsSoap;
+import sd2223.trab1.servers.rest.RestFeedsServer;
 
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 
@@ -26,11 +22,11 @@ public class SoapFeedsWebService extends SoapWebService<FeedsException> implemen
     final Feeds impl;
     SoapFeedsWebService() {
         super( (result)-> new FeedsException( result.error().toString()));
-        this.impl = new JavaFeedsSoap();
+        this.impl = new JavaFeeds(SoapFeedsServer.getDomain());
     }
 
     public long postMessage(String user, String pwd, Message msg) throws FeedsException{
-
+        msg.setId(SoapFeedsServer.getSeqA() * 256 + SoapFeedsServer.getBase());
         return super.fromJavaResult( impl.postMessage(user, pwd, msg) );
 
     }

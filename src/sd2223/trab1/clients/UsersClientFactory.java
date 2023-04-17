@@ -5,6 +5,7 @@ import sd2223.trab1.clients.soap.SoapUsersClient;
 import sd2223.trab1.clients.rest.RestUsersClient;
 
 import java.net.URI;
+import java.util.logging.Logger;
 
 public class UsersClientFactory {
 
@@ -13,7 +14,6 @@ public class UsersClientFactory {
 
 	public static Users get(URI serverURI) {
 		var uriString = serverURI.toString();
-
 		if (uriString.endsWith(REST))
 			return new RestUsersClient(serverURI);
 		else if (uriString.endsWith(SOAP))

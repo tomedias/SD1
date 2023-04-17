@@ -7,15 +7,15 @@ import sd2223.trab1.servers.java.JavaFeeds;
 
 import java.util.List;
 
-public class RestFeedsResource extends RestResource implements FeedsService {
+public class RestFeedsResource extends RestResource implements FeedsService{
 
     final Feeds impl;
     public RestFeedsResource() {
-        this.impl = new JavaFeeds();
+        this.impl = new JavaFeeds(RestFeedsServer.getDomain());
     }
     @Override
     public long postMessage(String user, String pwd, Message msg) {
-
+        msg.setId(RestFeedsServer.getSeqA() * 256 + RestFeedsServer.getBase());
         return super.fromJavaResult( impl.postMessage(user, pwd, msg) );
 
     }
@@ -54,10 +54,7 @@ public class RestFeedsResource extends RestResource implements FeedsService {
 
     @Override
     public void unsubscribeUser(String user, String userSub, String pwd) {
-
         super.fromJavaResult( impl.unsubscribeUser(user,userSub,pwd));
-
-
     }
 
     @Override

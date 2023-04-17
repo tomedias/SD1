@@ -20,8 +20,6 @@ public class RestFeedsClient extends RestClient implements Feeds {
 
     final WebTarget target;
 
-    private static Logger Log = Logger.getLogger(RestFeedsClient.class.getName());
-
     public RestFeedsClient( URI serverURI ) {
         super( serverURI );
         target = client.target( serverURI ).path( FeedsService.PATH );
