@@ -85,25 +85,31 @@ public class JavaFeeds implements Feeds {
             Log.info("UserId or password null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
+        Log.info("Checked null");
         if(!checkUserExist(user)){
             Log.info("User does not exist");
             return Result.error(ErrorCode.NOT_FOUND);
         }
+        Log.info("Checked user exist");
         if(!checkUser(user,pwd)){
             Log.info("Password or domain is incorrect.");
             return Result.error(ErrorCode.FORBIDDEN);
         }
+        Log.info("Checked passed");
         synchronized (feeds){
-            HashMap<Long, Message> userFeed = feeds.get(user);
-            Message message;
-            if(userFeed!=null) {
-                message = userFeed.remove(mid);
-                if (message == null) {
-                    Log.info("Message does not exist");
-                    return Result.error(ErrorCode.NOT_FOUND);
-                }
-            }
             synchronized (removed){
+            List<Message> userFeed = getAllFeedMessaged(user);
+
+
+            boolean message = userFeed.removeIf(m->m.getId()==mid);
+            if(feeds.get(user)!=null){
+                feeds.get(user).remove(mid);
+            }
+            if (!message) {
+                Log.info("Message does not exist");
+                return Result.error(ErrorCode.NOT_FOUND);
+            }
+
                 if(removed.get(user)==null){
                     List<Long> list = new ArrayList<Long>();
                     list.add(mid);
@@ -176,20 +182,26 @@ public class JavaFeeds implements Feeds {
                     }
                     if (subs.get(user) != null) {
                         for (String u : subs.get(user)) {
-                            if (u.split("@")[1].equals(domainS) && feeds.get(u) != null) {
-                                list.addAll(feeds.get(u).values().stream().toList());
+                            if (u.split("@")[1].equals(domainS)) {
+                                if(feeds.get(u)!=null)
+                                    list.addAll(feeds.get(u).values().stream().toList());
                             } else {
                                 String[] path = u.split("@");
                                 String domain = path[1];
                                 String userID = path[0];
+
                                 URI uri = discovery.knownUrisOf(domain, "feeds");
                                 RestFeedsClient client = new RestFeedsClient(uri);
                                 Result<List<Message>> r = client.getPersonalFeeds(u);
 
                                 if (r.isOK()) {
                                     List<Message> listM = r.value();
-                                    list.addAll(listM);
-                                    Log.info("Added personal feed");
+                                    Log.info("Got feed");
+                                    if(listM!=null){
+                                        list.addAll(listM);
+                                        Log.info("Added personal feed");
+                                    }
+
                                 }
 
                             }
@@ -208,7 +220,7 @@ public class JavaFeeds implements Feeds {
             if(r.isOK()){
                 List<Message> listM = r.value();
                 Log.info("Added personal feed");
-                return listM;
+                return listM!=null ? listM : new ArrayList<Message>();
             }
         }
         return new ArrayList<>();
@@ -301,7 +313,7 @@ public class JavaFeeds implements Feeds {
         String userID= path[0];
         URI uri = discovery.knownUrisOf(domain,"users");
         RestUsersClient client = new RestUsersClient(uri);
-        Result<User> r = client.getUser(userID,password);
+        Result<Void> r = client.verifyPassword(userID,password);
         if(r!=null){
             return r.isOK();
         }
@@ -309,7 +321,7 @@ public class JavaFeeds implements Feeds {
     }
 
     private boolean checkUserExist(String user){
-        //Log.info("Sending request to user server");
+        Log.info("Sending request to user server");
         String[] path = user.split("@");
         String domain = path[1];
         String userID= path[0];
@@ -318,13 +330,16 @@ public class JavaFeeds implements Feeds {
         RestUsersClient client = new RestUsersClient(uri);
         Result<List<User>> r = client.searchUsers(userID);
         List<User> users = r.value();
-        if(r.isOK()){
-            for (User userC : users) {
-                //Log.info("Found user: " + userC.getName());
-                if(userC.getName().equals(userID))
-                    return true;
+        Log.info("Got List");
+            if(r.isOK() && users!=null){
+                for (User userC : users) {
+                    //Log.info("Found user: " + userC.getName());
+                    if(userC!=null && userC.getName().equals(userID))
+                        return true;
+                }
             }
-        }
+
+
         return false;
     }
 

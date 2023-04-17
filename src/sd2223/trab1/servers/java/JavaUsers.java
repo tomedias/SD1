@@ -18,6 +18,7 @@ import sd2223.trab1.clients.rest.RestUsersClient;
 import sd2223.trab1.servers.rest.RestUsersServer;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,11 +46,11 @@ public class JavaUsers implements Users {
 				Log.info("User already exists.");
 				return Result.error( ErrorCode.CONFLICT);
 			}
-			//Log.info("Success creating " +  users.get(user.getName()).getName() );
-			return Result.ok( String.format("%s@%s",user.getName(), RestUsersServer.getDomain()));
+			Log.info("Success creating " +  users.get(user.getName()).getName() );
+
 		}
 
-
+		return Result.ok( String.format("%s@%s",user.getName(), RestUsersServer.getDomain()));
 	}
 
 	@Override
@@ -156,7 +157,7 @@ public class JavaUsers implements Users {
 	@Override
 	public Result<List<User>> searchUsers(String pattern) {
 		Log.info("searchUsers : pattern = " + pattern);
-		List<User> result = new java.util.ArrayList<User>();
+		List<User> result = new ArrayList<>();
 		synchronized (users) {
 			for (User u : users.values()) {
 				if (u.getName().toLowerCase().contains(pattern)) {

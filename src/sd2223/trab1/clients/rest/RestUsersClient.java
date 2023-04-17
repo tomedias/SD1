@@ -87,15 +87,20 @@ public class RestUsersClient extends RestClient implements Users {
 		super.reTry(()->clt_deleteFeed(user));
 	}
 
-	@Override
-	public Result<User> updateUser(String userId, String password, User user) {
-		Result<User> result =deleteUser(userId,password);
-		createUser(user);
-		return result;
+	private Result<User> clt_updateUser(String userId,String password,User user){
+		Response r = target.path( userId )
+				.queryParam(UsersService.PWD, password).request()
+				.accept(MediaType.APPLICATION_JSON)
+				.put(Entity.entity(user, MediaType.APPLICATION_JSON));
+		return super.toJavaResult(r, User.class);
 	}
 
 	@Override
-	public Result<User> deleteUser(String userId, String password) {
+	public Result<User> updateUser(String userId, String password, User user) {
+		return super.reTry(() -> clt_updateUser(userId, password, user));
+	}
+
+	private Result<User> clt_deleteUser(String userId, String password) {
 		Response r = target.path( userId )
 				.queryParam(UsersService.PWD, password).request()
 				.accept(MediaType.APPLICATION_JSON)
@@ -103,14 +108,21 @@ public class RestUsersClient extends RestClient implements Users {
 
 		return super.toJavaResult(r, User.class);
 	}
-
 	@Override
-	public Result<List<User>> searchUsers(String pattern) {
+	public Result<User> deleteUser(String userId, String password) {
+		return super.reTry(() -> clt_deleteUser(userId, password));
+	}
+	private Result<List<User>> clt_searchUsers(String pattern) {
 		Response r = target.path("/").queryParam( UsersService.QUERY, pattern).request()
 				.accept(MediaType.APPLICATION_JSON)
 				.get();
 
 		return super.listToJavaResult(r, new GenericType<>(){});
+
+	}
+	@Override
+	public Result<List<User>> searchUsers(String pattern) {
+		return super.reTry(() -> clt_searchUsers(pattern));
 
 	}
 }

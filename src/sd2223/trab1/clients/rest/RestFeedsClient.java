@@ -41,12 +41,16 @@ public class RestFeedsClient extends RestClient implements Feeds {
         return null;
     }
 
-    @Override
-    public Result<List<Message>> getMessages(String user, long time) {
+
+    private Result<List<Message>> clt_getMessages(String user, long time) {
         Response r = target.path(user).queryParam( UsersService.QUERY, time).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
         return super.listToJavaResult(r, new GenericType<>(){});
+    }
+    @Override
+    public Result<List<Message>> getMessages(String user, long time) {
+        return super.reTry(() -> clt_getMessages(user, time));
     }
 
     @Override
@@ -69,15 +73,16 @@ public class RestFeedsClient extends RestClient implements Feeds {
         return null;
     }
 
-    @Override
-    public Result<List<Message>> getPersonalFeeds(String user) {
-        Log.info("Chegou ao request");
+    private Result<List<Message>> clt_getPersonalFeeds(String user) {
         Response r = target.path("/").queryParam( FeedsService.USERSUB, user).request()
                 .accept(MediaType.APPLICATION_JSON)
                 .get();
-        Log.info("Saiu do request");
         return super.listToJavaResult(r, new GenericType<>(){});
+    }
+    @Override
+    public Result<List<Message>> getPersonalFeeds(String user) {
 
+        return super.reTry(() -> clt_getPersonalFeeds(user));
     }
 
 
