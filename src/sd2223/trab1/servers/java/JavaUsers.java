@@ -53,7 +53,7 @@ public class JavaUsers implements Users {
 
 		}
 
-		return Result.ok( String.format("%s@%s",user.getName(), RestUsersServer.getDomain()==null));
+		return Result.ok( String.format("%s@%s",user.getName(), RestUsersServer.getDomain()));
 	}
 
 	@Override
