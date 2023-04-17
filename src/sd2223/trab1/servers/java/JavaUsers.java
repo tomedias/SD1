@@ -14,6 +14,7 @@ import sd2223.trab1.api.java.Result.ErrorCode;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
+import sd2223.trab1.clients.rest.RestFeedsClient;
 import sd2223.trab1.clients.rest.RestUsersClient;
 import sd2223.trab1.servers.rest.RestUsersServer;
 
@@ -143,10 +144,9 @@ public class JavaUsers implements Users {
 			users.remove(name);
 
 			String domain = RestUsersServer.getDomain();
-			URI uri = discovery.knownUrisOf(domain,"users");
-			RestUsersClient client = new RestUsersClient(uri);
+			URI uri = discovery.knownUrisOf(domain,"feeds");
+			RestFeedsClient client = new RestFeedsClient(uri);
 			client.deleteFeed(name);
-
 			return Result.ok(user);
 		}
 

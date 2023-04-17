@@ -42,12 +42,7 @@ public class RestUsersClient extends RestClient implements Users {
 
 		return super.toJavaResult(r, String.class);
 	}
-	private Result<Void> clt_deleteFeed(String user){
-		Response r = target.path(FeedsService.USER).request()
-				.accept(MediaType.APPLICATION_JSON)
-				.delete();
-		return super.toJavaResult(r,Void.class);
-	}
+
 
 
 	private Result<User> clt_getUser(String name, String pwd) {
@@ -83,10 +78,6 @@ public class RestUsersClient extends RestClient implements Users {
 	public Result<Void> verifyPassword(String name, String pwd) {
 		return super.reTry(() -> clt_verifyPassword(name, pwd));
 	}
-	public void deleteFeed(String user){
-		super.reTry(()->clt_deleteFeed(user));
-	}
-
 	private Result<User> clt_updateUser(String userId,String password,User user){
 		Response r = target.path( userId )
 				.queryParam(UsersService.PWD, password).request()

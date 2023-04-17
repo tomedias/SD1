@@ -53,6 +53,7 @@ public class RestFeedsClient extends RestClient implements Feeds {
         return super.reTry(() -> clt_getMessages(user, time));
     }
 
+
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
         return null;
@@ -68,9 +69,15 @@ public class RestFeedsClient extends RestClient implements Feeds {
         return null;
     }
 
+    private Result<Void> clt_deleteFeed(String user){
+        Response r = target.path(user).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .delete();
+        return super.toJavaResult(r,Void.class);
+    }
     @Override
     public Result<Void> deleteFeed(String user) {
-        return null;
+        return super.reTry(() -> clt_deleteFeed(user));
     }
 
     private Result<List<Message>> clt_getPersonalFeeds(String user) {

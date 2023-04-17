@@ -344,6 +344,7 @@ public class JavaFeeds implements Feeds {
     }
 
     public Result<Void> deleteFeed(String user){
+        Log.fine("Deleting feed " + user);
         synchronized (feeds){
             synchronized (subs){
                 Log.info("Removed feed " + user);
