@@ -15,15 +15,9 @@ import sd2223.trab1.api.java.Feeds;
 import sd2223.trab1.api.java.Result;
 
 import sd2223.trab1.api.java.Result.ErrorCode;
-import sd2223.trab1.api.rest.UsersService;
-import sd2223.trab1.clients.rest.RestClient;
-import sd2223.trab1.clients.rest.RestFeedsClient;
-import sd2223.trab1.clients.rest.RestUsersClient;
+
 import sd2223.trab1.clients.soap.SoapFeedsClient;
 import sd2223.trab1.clients.soap.SoapUsersClient;
-import sd2223.trab1.servers.rest.RestFeedsServer;
-import sd2223.trab1.servers.rest.RestUsersResource;
-import sd2223.trab1.servers.rest.RestUsersServer;
 import sd2223.trab1.servers.soap.SoapFeedsServer;
 
 import java.net.URI;
@@ -178,7 +172,7 @@ public class JavaFeedsSoap implements Feeds {
         String userIDS= pathS[0];
 
 
-        String serverDomain =RestFeedsServer.getDomain()==null? SoapFeedsServer.getDomain():RestFeedsServer.getDomain();
+        String serverDomain =SoapFeedsServer.getDomain();
         if(domainS.equals(serverDomain)){
             synchronized (feeds) {
                 synchronized (subs){
@@ -243,7 +237,7 @@ public class JavaFeedsSoap implements Feeds {
     @Override
     public Result<Void> subUser(String user, String userSub, String pwd) {
         Log.info(user +" subscribed to " + userSub);
-        if(user== null || userSub==null || pwd==null || !user.split("@")[1].equals(RestFeedsServer.getDomain()) ){
+        if(user== null || userSub==null || pwd==null || !user.split("@")[1].equals(SoapFeedsServer.getDomain()) ){
             Log.info("UserId or password are null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
@@ -274,7 +268,7 @@ public class JavaFeedsSoap implements Feeds {
     @Override
     public Result<Void> unsubscribeUser(String user, String userSub, String pwd) {
         Log.info(user +" unsubscribed to " + userSub);
-        if(user== null || userSub==null || pwd==null || !user.split("@")[1].equals(RestFeedsServer.getDomain())){
+        if(user== null || userSub==null || pwd==null || !user.split("@")[1].equals(SoapFeedsServer.getDomain())){
             Log.info("UserId or password are null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
