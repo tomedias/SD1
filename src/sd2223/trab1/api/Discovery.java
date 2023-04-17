@@ -56,7 +56,7 @@ class DiscoveryImpl implements Discovery {
 	static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;
 
 	// Replace with appropriate values...
-	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("224.0.0.0", 9000);
+	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("226.226.226.226", 2266);
 
 	// Used separate the two fields that make up a service announcement.
 	private static final String DELIMITER = "\t";
@@ -105,7 +105,12 @@ class DiscoveryImpl implements Discovery {
 
 	@Override
 	public URI knownUrisOf(String domain , String serviceName) {
-		return knownUris.get(new Domain(domain, serviceName));
+		while(true) {
+			if (knownUris.get(new Domain(domain, serviceName)) != null) {
+				return knownUris.get(new Domain(domain, serviceName));
+			}
+		}
+
 	}
 
 	private void startListener() {

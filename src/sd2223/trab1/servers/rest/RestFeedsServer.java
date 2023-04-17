@@ -9,12 +9,16 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.util.logging.Logger;
 
+
+
 public class RestFeedsServer {
     private static Logger Log = Logger.getLogger(RestFeedsServer.class.getName());
 
     private static Discovery discovery = Discovery.getInstance();
 
     private static String domain;
+    private static long base;
+    private static long num_sql=0;
 
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -30,6 +34,7 @@ public class RestFeedsServer {
 
             try{
                 domain = args[0];
+                base = Long.parseLong(args[1]);
             }catch(Exception e){
                 Log.severe(e.getMessage());
             }
@@ -53,4 +58,11 @@ public class RestFeedsServer {
     public static String getDomain() {
         return domain;
     }
+    public static long getBase(){
+        return base;
+    }
+    public static long getSeqA(){
+        return num_sql++;
+    }
+
 }

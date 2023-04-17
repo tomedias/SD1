@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 @WebService(serviceName= FeedsService.NAME, targetNamespace=FeedsService.NAMESPACE, endpointInterface=FeedsService.INTERFACE)
 public class SoapFeedsWebService extends SoapWebService<FeedsException> implements FeedsService {
 
-    static Logger Log = Logger.getLogger(SoapUsersWebService.class.getName());
+    static Logger Log = Logger.getLogger(SoapFeedsWebService.class.getName());
 
     final Feeds impl;
     SoapFeedsWebService() {

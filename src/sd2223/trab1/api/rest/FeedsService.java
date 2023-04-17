@@ -12,6 +12,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import sd2223.trab1.api.Message;
+import sd2223.trab1.api.java.Result;
 
 @Path(FeedsService.PATH)
 public interface FeedsService {
@@ -20,8 +21,10 @@ public interface FeedsService {
 	String PWD = "pwd";
 	String USER = "user";
 	String TIME = "time";
+
 	String DOMAIN = "domain";
 	String USERSUB = "userSub";
+
 	
 	String PATH = "/feeds";
 	/**
@@ -59,6 +62,14 @@ public interface FeedsService {
 	@Path("/{" + USER + "}/{" + MID + "}")
 	void removeFromPersonalFeed(@PathParam(USER) String user, @PathParam(MID) long mid, @QueryParam(PWD) String pwd);
 
+
+	@DELETE
+	@Path("/{" + USER + "}")
+	void deleteFeed(@PathParam(USER) String user);
+
+
+
+
 	/**
 	 * Obtains the message with id from the feed of user (might be a remote user)
 	 * 
@@ -86,6 +97,11 @@ public interface FeedsService {
 	@Path("/{" + USER +"}")
 	@Produces(MediaType.APPLICATION_JSON)
 	List<Message> getMessages(@PathParam(USER) String user, @QueryParam(TIME) long time);
+
+
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	List<Message> getPersonalFeeds(@QueryParam(USERSUB) String user);
 
 
 

@@ -20,5 +20,10 @@ public interface Feeds {
 
     Result<List<String>> listSubs(String user);
 
+    Result<Void> deleteFeed(String user);
+
+    Result<List<Message>> getPersonalFeeds(String user);
+
+
 
 }

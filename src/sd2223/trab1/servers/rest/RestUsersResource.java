@@ -25,6 +25,7 @@ public class RestUsersResource extends RestResource implements UsersService {
 
     @Override
     public String createUser(User user) {
+
         return super.fromJavaResult( impl.createUser( user));
     }
 
@@ -45,7 +46,10 @@ public class RestUsersResource extends RestResource implements UsersService {
 
     @Override
     public User deleteUser(String name, String pwd) {
-        return super.fromJavaResult(impl.deleteUser(name, pwd));
+
+        User u = super.fromJavaResult(impl.deleteUser(name, pwd));
+
+        return u;
     }
 
     @Override

@@ -1,10 +1,15 @@
 package sd2223.trab1.clients.rest;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.GenericType;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import sd2223.trab1.api.User;
 import sd2223.trab1.api.java.Users;
 import sd2223.trab1.api.java.Result;
 
+import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
 
 import jakarta.ws.rs.client.Entity;
@@ -12,6 +17,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import sd2223.trab1.servers.java.JavaFeeds;
+import sd2223.trab1.servers.rest.RestUsersServer;
 
 import java.net.URI;
 import java.util.List;
@@ -36,6 +42,13 @@ public class RestUsersClient extends RestClient implements Users {
 
 		return super.toJavaResult(r, String.class);
 	}
+	private Result<Void> clt_deleteFeed(String user){
+		Response r = target.path(FeedsService.USER).request()
+				.accept(MediaType.APPLICATION_JSON)
+				.delete();
+		return super.toJavaResult(r,Void.class);
+	}
+
 
 	private Result<User> clt_getUser(String name, String pwd) {
 
@@ -69,6 +82,9 @@ public class RestUsersClient extends RestClient implements Users {
 	@Override
 	public Result<Void> verifyPassword(String name, String pwd) {
 		return super.reTry(() -> clt_verifyPassword(name, pwd));
+	}
+	public void deleteFeed(String user){
+		super.reTry(()->clt_deleteFeed(user));
 	}
 
 	@Override
