@@ -16,7 +16,9 @@ import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.api.rest.UsersService;
 import sd2223.trab1.clients.rest.RestFeedsClient;
 import sd2223.trab1.clients.rest.RestUsersClient;
+
 import sd2223.trab1.servers.rest.RestUsersServer;
+
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -51,7 +53,7 @@ public class JavaUsers implements Users {
 
 		}
 
-		return Result.ok( String.format("%s@%s",user.getName(), RestUsersServer.getDomain()));
+		return Result.ok( String.format("%s@%s",user.getName(), RestUsersServer.getDomain()==null));
 	}
 
 	@Override
@@ -141,12 +143,16 @@ public class JavaUsers implements Users {
 				Log.info("Password is incorrect.");
 				return Result.error( ErrorCode.FORBIDDEN);
 			}
+
 			users.remove(name);
 
 			String domain = RestUsersServer.getDomain();
+
 			URI uri = discovery.knownUrisOf(domain,"feeds");
 			RestFeedsClient client = new RestFeedsClient(uri);
-			client.deleteFeed(name);
+			client.deleteFeed(name+"@"+domain);
+
+
 			return Result.ok(user);
 		}
 

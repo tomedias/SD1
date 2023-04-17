@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebService;
 import sd2223.trab1.api.Message;
+import sd2223.trab1.api.java.Result;
 
 @WebService(serviceName=FeedsService.NAME, targetNamespace=FeedsService.NAMESPACE, endpointInterface=FeedsService.INTERFACE)
 public interface FeedsService {
@@ -103,4 +104,10 @@ public interface FeedsService {
 	 */
 	@WebMethod
 	List<String> listSubs(String user) throws FeedsException;
+
+	@WebMethod
+	void deleteFeed(String user) throws FeedsException;
+
+	@WebMethod
+	List<Message> getPersonalFeeds(String user) throws FeedsException;
 }

@@ -10,6 +10,7 @@ import sd2223.trab1.api.soap.FeedsService;
 import sd2223.trab1.api.soap.UsersException;
 
 import sd2223.trab1.servers.java.JavaFeeds;
+import sd2223.trab1.servers.java.JavaFeedsSoap;
 
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class SoapFeedsWebService extends SoapWebService<FeedsException> implemen
     final Feeds impl;
     SoapFeedsWebService() {
         super( (result)-> new FeedsException( result.error().toString()));
-        this.impl = new JavaFeeds();
+        this.impl = new JavaFeedsSoap();
     }
 
     public long postMessage(String user, String pwd, Message msg) throws FeedsException{
@@ -64,5 +65,15 @@ public class SoapFeedsWebService extends SoapWebService<FeedsException> implemen
     @Override
     public List<String> listSubs(String user) throws FeedsException{
         return super.fromJavaResult( impl.listSubs(user));
+    }
+
+    @Override
+    public void deleteFeed(String user) throws FeedsException {
+        super.fromJavaResult( impl.deleteFeed(user));
+    }
+
+    @Override
+    public List<Message> getPersonalFeeds(String user) throws FeedsException {
+        return super.fromJavaResult(impl.getPersonalFeeds(user));
     }
 }

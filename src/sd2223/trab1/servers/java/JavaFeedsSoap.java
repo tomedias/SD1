@@ -19,10 +19,12 @@ import sd2223.trab1.api.rest.UsersService;
 import sd2223.trab1.clients.rest.RestClient;
 import sd2223.trab1.clients.rest.RestFeedsClient;
 import sd2223.trab1.clients.rest.RestUsersClient;
+import sd2223.trab1.clients.soap.SoapFeedsClient;
+import sd2223.trab1.clients.soap.SoapUsersClient;
 import sd2223.trab1.servers.rest.RestFeedsServer;
 import sd2223.trab1.servers.rest.RestUsersResource;
 import sd2223.trab1.servers.rest.RestUsersServer;
-
+import sd2223.trab1.servers.soap.SoapFeedsServer;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -31,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class JavaFeeds implements Feeds {
+public class JavaFeedsSoap implements Feeds {
 
     private final static Map<String, HashMap<Long, Message>> feeds = new HashMap<String, HashMap<Long, Message>>();
 
@@ -46,40 +48,38 @@ public class JavaFeeds implements Feeds {
 
     @Override
     public Result<Long> postMessage(String user, String pwd, Message msg) {
-            String domain = RestFeedsServer.getDomain();
-            long seq;
-            long base;
-            seq=RestFeedsServer.getSeqA();
-            base=RestFeedsServer.getBase();
+        String domain = SoapFeedsServer.getDomain();
+        long seq=SoapFeedsServer.getSeqA();
+        long base=SoapFeedsServer.getBase();
 
 
-            Log.info("Posting Message to feed in domain: " + domain);
-            if(user==null || pwd==null || msg==null || !user.split("@")[1].equals(domain)){
-                Log.info("UserId or password null.");
-                return Result.error(ErrorCode.BAD_REQUEST );
-            }
-            if(!checkUserExist(user)){
-                Log.info("User does not exist");
-                return Result.error(ErrorCode.NOT_FOUND);
-            }
-            if(!checkUser(user,pwd)){
-                Log.info("Password or domain is incorrect.");
-                return Result.error(ErrorCode.FORBIDDEN);
+        Log.info("Posting Message to feed in domain: " + domain);
+        if(user==null || pwd==null || msg==null || !user.split("@")[1].equals(domain)){
+            Log.info("UserId or password null.");
+            return Result.error(ErrorCode.BAD_REQUEST );
+        }
+        if(!checkUserExist(user)){
+            Log.info("User does not exist");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
+        if(!checkUser(user,pwd)){
+            Log.info("Password or domain is incorrect.");
+            return Result.error(ErrorCode.FORBIDDEN);
+        }
+
+        msg.setId(seq * 256 + base);
+        synchronized (feeds){
+            HashMap<Long, Message> userFeed = feeds.get(user);
+            if(userFeed ==null){
+                userFeed= new HashMap<Long, Message>();
+                userFeed.put(msg.getId(), msg);
+                feeds.put(user, userFeed);
+            }else{
+                userFeed.put(msg.getId(), msg);
             }
 
-            msg.setId(seq * 256 + base);
-            synchronized (feeds){
-                HashMap<Long, Message> userFeed = feeds.get(user);
-                if(userFeed ==null){
-                    userFeed= new HashMap<Long, Message>();
-                    userFeed.put(msg.getId(), msg);
-                    feeds.put(user, userFeed);
-                }else{
-                    userFeed.put(msg.getId(), msg);
-                }
-
-                return Result.ok(msg.getId());
-            }
+            return Result.ok(msg.getId());
+        }
 
 
 
@@ -88,7 +88,7 @@ public class JavaFeeds implements Feeds {
     @Override
     public Result<Void> removeFromPersonalFeed(String user, long mid, String pwd) {
         Log.info("Removing message from feed" + user + " mid: " + mid);
-        if(user==null || pwd==null || !user.split("@")[1].equals(RestFeedsServer.getDomain())){
+        if(user==null || pwd==null || !user.split("@")[1].equals(SoapFeedsServer.getDomain())){
             Log.info("UserId or password null.");
             return Result.error(ErrorCode.BAD_REQUEST );
         }
@@ -105,17 +105,17 @@ public class JavaFeeds implements Feeds {
         Log.info("Checked passed");
         synchronized (feeds){
             synchronized (removed){
-            List<Message> userFeed = getAllFeedMessaged(user);
+                List<Message> userFeed = getAllFeedMessaged(user);
 
 
-            boolean message = userFeed.removeIf(m->m.getId()==mid);
-            if(feeds.get(user)!=null){
-                feeds.get(user).remove(mid);
-            }
-            if (!message) {
-                Log.info("Message does not exist");
-                return Result.error(ErrorCode.NOT_FOUND);
-            }
+                boolean message = userFeed.removeIf(m->m.getId()==mid);
+                if(feeds.get(user)!=null){
+                    feeds.get(user).remove(mid);
+                }
+                if (!message) {
+                    Log.info("Message does not exist");
+                    return Result.error(ErrorCode.NOT_FOUND);
+                }
 
                 if(removed.get(user)==null){
                     List<Long> list = new ArrayList<Long>();
@@ -178,7 +178,7 @@ public class JavaFeeds implements Feeds {
         String userIDS= pathS[0];
 
 
-        String serverDomain =RestFeedsServer.getDomain();
+        String serverDomain =RestFeedsServer.getDomain()==null? SoapFeedsServer.getDomain():RestFeedsServer.getDomain();
         if(domainS.equals(serverDomain)){
             synchronized (feeds) {
                 synchronized (subs){
@@ -200,8 +200,10 @@ public class JavaFeeds implements Feeds {
                                 URI uri = discovery.knownUrisOf(domain, "feeds");
                                 Result<List<Message>> r;
 
-                                RestFeedsClient client = new RestFeedsClient(uri);
+                                SoapFeedsClient client = new SoapFeedsClient(uri);
                                 r = client.getPersonalFeeds(u);
+
+
 
                                 if (r.isOK()) {
                                     List<Message> listM = r.value();
@@ -225,9 +227,8 @@ public class JavaFeeds implements Feeds {
             URI uri = discovery.knownUrisOf(domainS,"feeds");
             Result<List<Message>> r;
 
-            RestFeedsClient client = new RestFeedsClient(uri);
+            SoapFeedsClient client = new SoapFeedsClient(uri);
             r = client.getMessages(user,0);
-
 
 
             if(r.isOK()){
@@ -327,7 +328,7 @@ public class JavaFeeds implements Feeds {
         URI uri = discovery.knownUrisOf(domain,"users");
         Result<Void> r;
 
-        RestUsersClient client = new RestUsersClient(uri);
+        SoapUsersClient client = new SoapUsersClient(uri);
         r = client.verifyPassword(userID,password);
 
 
@@ -346,18 +347,18 @@ public class JavaFeeds implements Feeds {
         //Log.info("Found uri: " + uri.toString());
         Result<List<User>> r;
 
-        RestUsersClient client = new RestUsersClient(uri);
+        SoapUsersClient client = new SoapUsersClient(uri);
         r = client.searchUsers(userID);
 
         List<User> users = r.value();
         Log.info("Got List");
-            if(r.isOK() && users!=null){
-                for (User userC : users) {
-                    //Log.info("Found user: " + userC.getName());
-                    if(userC!=null && userC.getName().equals(userID))
-                        return true;
-                }
+        if(r.isOK() && users!=null){
+            for (User userC : users) {
+                //Log.info("Found user: " + userC.getName());
+                if(userC!=null && userC.getName().equals(userID))
+                    return true;
             }
+        }
 
 
         return false;
