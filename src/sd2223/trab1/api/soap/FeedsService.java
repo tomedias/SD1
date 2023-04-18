@@ -4,6 +4,7 @@ import java.util.List;
 
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebService;
+import jakarta.ws.rs.QueryParam;
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Result;
 
@@ -110,4 +111,16 @@ public interface FeedsService {
 
 	@WebMethod
 	List<Message> getPersonalFeeds(String user) throws FeedsException;
+
+	@WebMethod
+	void postOutsideMessage(String user, Message msg) throws FeedsException;
+
+	@WebMethod
+	void removeUserMessage(String user, long mid) throws FeedsException;
+
+	@WebMethod
+	void addSub(String user,String userSub) throws FeedsException;
+
+	@WebMethod
+	void removeSub(String user,String userSub) throws FeedsException;
 }

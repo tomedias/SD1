@@ -1,6 +1,7 @@
 package sd2223.trab1.clients.rest;
 
 
+import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.MediaType;
@@ -49,6 +50,7 @@ public class RestFeedsClient extends RestClient implements Feeds {
     @Override
     public Result<List<Message>> getMessages(String user, long time) {
         return super.reTry(() -> clt_getMessages(user, time));
+
     }
 
 
@@ -86,8 +88,61 @@ public class RestFeedsClient extends RestClient implements Feeds {
     }
     @Override
     public Result<List<Message>> getPersonalFeeds(String user) {
-
         return super.reTry(() -> clt_getPersonalFeeds(user));
+    }
+
+
+    private Result<Void> clt_postOutsideMessage(String user,Message msg) {
+        Response r = target.path( user )
+                .request()
+                .post(Entity.entity(msg, MediaType.APPLICATION_JSON));
+
+        return super.toJavaResult(r, Void.class);
+    }
+    @Override
+    public Result<Void> postOutsideMessage(String user, Message msg) {
+        return super.reTry(() -> clt_postOutsideMessage(user,msg));
+    }
+
+
+    private Result<Void> clt_removeUserMessage(String user,long mid) {
+        Response r = target.path("/").queryParam(FeedsService.USER,user)
+                .queryParam( FeedsService.MID, mid).request()
+                .accept(MediaType.APPLICATION_JSON)
+                .delete();
+        return super.listToJavaResult(r, new GenericType<>(){});
+    }
+    @Override
+    public Result<Void> removeUserMessage(String user, long mid) {
+        return super.reTry(() -> clt_removeUserMessage(user,mid));
+    }
+
+
+    private Result<Void> clt_addSub(String user, String userSub) {
+        Response r = target.path("/")
+                .queryParam(FeedsService.USER,user)
+                .request()
+                .accept(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(userSub,MediaType.APPLICATION_JSON));
+        return super.listToJavaResult(r, new GenericType<>(){});
+    }
+
+    @Override
+    public Result<Void> addSub(String user, String userSub) {
+        return super.reTry(() -> clt_addSub(user,userSub));
+    }
+
+    private Result<Void> clt_removeSub(String user, String userSub) {
+        Response r = target.path(user)
+                .queryParam(FeedsService.USER,userSub)
+                .request()
+                .accept(MediaType.APPLICATION_JSON)
+                .delete();
+        return super.listToJavaResult(r, new GenericType<>(){});
+    }
+    @Override
+    public Result<Void> removeSub(String user, String userSub) {
+        return super.reTry(() -> clt_removeSub(user,userSub));
     }
 
 

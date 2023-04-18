@@ -8,6 +8,7 @@ import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -41,6 +42,8 @@ public interface Discovery {
 	public static Discovery getInstance() {
 		return DiscoveryImpl.getInstance();
 	}
+
+	List<URI> knownUrisOfList(String serviceName);
 }
 
 /**
@@ -66,6 +69,8 @@ class DiscoveryImpl implements Discovery {
 	private static Discovery singleton;
 
 	private Map<Domain, URI> knownUris = new HashMap<>();
+
+	private Map<String,Map<String,URI>> serviceKnownUris = new HashMap<>();
 	synchronized static Discovery getInstance() {
 		if (singleton == null) {
 			singleton = new DiscoveryImpl();
@@ -113,6 +118,16 @@ class DiscoveryImpl implements Discovery {
 
 	}
 
+	@Override
+	public List<URI> knownUrisOfList(String serviceName) {
+		while(true) {
+			if (serviceKnownUris.get(serviceName) != null) {
+				return serviceKnownUris.get(serviceName).values().stream().toList();
+			}
+		}
+
+	}
+
 	private void startListener() {
 		//Log.info(String.format("Starting discovery on multicast group: %s, port: %d\n", DISCOVERY_ADDR.getAddress(),
 				//DISCOVERY_ADDR.getPort()));
@@ -141,6 +156,13 @@ class DiscoveryImpl implements Discovery {
 								URI uri = URI.create(parts[1]);
 								Domain domains = new Domain(domain, serviceName);
 								knownUris.put(domains, uri);
+								Map<String,URI> list = serviceKnownUris.get(serviceName);
+								if(list==null){
+									list = new HashMap<String,URI>();
+									list.put(domain,uri);
+									serviceKnownUris.put(serviceName,list);
+								}
+								list.put(domain,uri);
 							}
 						}
 

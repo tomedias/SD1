@@ -150,6 +150,24 @@ public interface FeedsService {
 	@Path("/sub/list/{" + USER + "}")
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> listSubs(@PathParam(USER) String user);
+
+	@POST
+	@Path("/{" + USER + "}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	void postOutsideMessage(@PathParam(USER) String user, Message msg);
+
+	@DELETE
+	void removeUserMessage(@QueryParam(USER) String user, @QueryParam(MID)long mid);
+
+
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	void addSub(@QueryParam(USER)String user,String userSub);
+
+	@DELETE
+	@Path("{" + USER + "}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	void removeSub(@PathParam(USER) String user,@QueryParam(USER)String userSub);
 }
 
 

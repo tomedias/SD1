@@ -16,10 +16,6 @@ public class RestUsersResource extends RestResource implements UsersService {
     public RestUsersResource() {
         this.impl = new JavaUsers(RestUsersServer.getDomain());
     }
-    private final Map<String, User> users = new HashMap<String, User>();
-
-
-    private static final Logger Log = Logger.getLogger(RestUsersResource.class.getName());
 
     @Override
     public String createUser(User user) {

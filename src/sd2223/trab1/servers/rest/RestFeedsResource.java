@@ -2,6 +2,7 @@ package sd2223.trab1.servers.rest;
 
 import sd2223.trab1.api.Message;
 import sd2223.trab1.api.java.Feeds;
+import sd2223.trab1.api.java.Result;
 import sd2223.trab1.api.rest.FeedsService;
 import sd2223.trab1.servers.java.JavaFeeds;
 
@@ -17,7 +18,6 @@ public class RestFeedsResource extends RestResource implements FeedsService{
     public long postMessage(String user, String pwd, Message msg) {
         msg.setId(RestFeedsServer.getSeqA() * 256 + RestFeedsServer.getBase());
         return super.fromJavaResult( impl.postMessage(user, pwd, msg) );
-
     }
 
     @Override
@@ -62,6 +62,25 @@ public class RestFeedsResource extends RestResource implements FeedsService{
         return super.fromJavaResult( impl.listSubs(user));
     }
 
+    @Override
+    public void postOutsideMessage(String user, Message msg) {
+        super.fromJavaResult(impl.postOutsideMessage(user,msg));
+    }
+
+    @Override
+    public void removeUserMessage(String user, long mid) {
+        super.fromJavaResult(impl.removeUserMessage(user, mid));
+    }
+
+    @Override
+    public void addSub(String user, String userSub) {
+        super.fromJavaResult(impl.addSub(user, userSub));
+    }
+
+    @Override
+    public void removeSub(String user, String userSub) {
+        super.fromJavaResult(impl.removeSub(user, userSub));
+    }
 
 
 }

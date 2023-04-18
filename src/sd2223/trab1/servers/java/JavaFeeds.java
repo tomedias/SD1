@@ -25,7 +25,10 @@ public class JavaFeeds implements Feeds {
 
     private final static Map<String,List<Long>> removed = new HashMap<>();
 
+
     protected static Logger Log = Logger.getLogger(JavaFeeds.class.getName());
+
+
 
     private final String domain;
 
@@ -38,8 +41,6 @@ public class JavaFeeds implements Feeds {
 
     @Override
     public Result<Long> postMessage(String user, String pwd, Message msg) {
-
-
         Log.info("Posting Message to feed in domain: " + domain);
         if(user==null || pwd==null || msg==null || !user.split("@")[1].equals(domain)){
             Log.info("UserId or password null.");
@@ -63,11 +64,21 @@ public class JavaFeeds implements Feeds {
             }else{
                 userFeed.put(msg.getId(), msg);
             }
+            new Thread(()->{
+                final List<URI> uris = discovery.knownUrisOfList("feeds");
+                for(URI uri : uris){
+                    Feeds client = FeedsClientFactory.get(uri);
+                    Result<Void> r = client.postOutsideMessage(user, msg);
+                    if(!r.isOK()){
+                        feeds.get(user).remove(msg.getId());
+                    }
+                }
+            }).start();
 
-            return Result.ok(msg.getId());
+
         }
 
-
+        return Result.ok(msg.getId());
     }
 
     @Override
@@ -77,100 +88,66 @@ public class JavaFeeds implements Feeds {
             Log.info("UserId or password null.");
             return Result.error(Result.ErrorCode.BAD_REQUEST );
         }
-        Log.info("Checked null");
+
         if(!checkUserExist(user)){
             Log.info("User does not exist");
             return Result.error(Result.ErrorCode.NOT_FOUND);
         }
-        Log.info("Checked user exist");
+
         if(!checkUser(user,pwd)){
             Log.info("Password or domain is incorrect.");
             return Result.error(Result.ErrorCode.FORBIDDEN);
         }
-        Log.info("Checked passed");
+
         synchronized (feeds){
-            synchronized (removed){
                 List<Message> userFeed = getAllFeedMessaged(user);
-
-
-                boolean message = userFeed.removeIf(m->m.getId()==mid);
-                if(feeds.get(user)!=null){
-                    feeds.get(user).remove(mid);
-                }
+                boolean message = userFeed.removeIf(m -> m.getId() == mid);
                 if (!message) {
                     Log.info("Message does not exist");
                     return Result.error(Result.ErrorCode.NOT_FOUND);
                 }
-
-                if(removed.get(user)==null){
-                    List<Long> list = new ArrayList<Long>();
-                    list.add(mid);
-                    removed.put(user, list);
-                }else{
-                    removed.get(user).add(mid);
+                List<URI> uris = discovery.knownUrisOfList("feeds");
+                for (URI uri : uris) {
+                    Feeds client = FeedsClientFactory.get(uri);
+                    Result<Void> r = client.removeUserMessage(user, mid);
+                    if (!r.isOK()) {
+                        return Result.error(Result.ErrorCode.BAD_REQUEST);
+                    }
                 }
-
-
                 return Result.ok();
-            }
+
 
         }
     }
-
     protected List<Message> getAllFeedMessaged(String user){
         Log.info("Getting All Messages from all feeds subscribed");
-        String[] pathS = user.split("@");
-        String domainS = pathS[1];
-        if(domainS.equals(domain)){
             synchronized (feeds) {
                 synchronized (subs){
-                    HashMap<Long, Message> userFeed = feeds.get(user);
-                    List<Message> list = new ArrayList<>();
-                    if (userFeed != null) {
-                        list.addAll(userFeed.values().stream().toList());
-                    }
-                    if (subs.get(user) != null) {
-                        for (String u : subs.get(user)) {
-                            if (u.split("@")[1].equals(domain)) {
-                                if(feeds.get(u)!=null)
-                                    list.addAll(feeds.get(u).values().stream().toList());
-                            }else {
-                                String[] path = u.split("@");
-                                String domain = path[1];
-                                URI uri = discovery.knownUrisOf(domain, "feeds");
-                                Log.info("Current domain : " + this.domain + " Found different domain with uri:" + uri);
-                                Result<List<Message>> r;
-                                Feeds client = FeedsClientFactory.get(uri);
-                                r = client.getPersonalFeeds(u);
-                                if (r.isOK()) {
-                                    List<Message> listM = r.value();
-                                    Log.info("Got feed");
-                                    if(listM!=null){
-                                        list.addAll(listM);
-
+                    synchronized (removed){
+                        HashMap<Long, Message> userFeed = feeds.get(user);
+                        List<Message> list = new ArrayList<>();
+                        if (userFeed != null) {
+                            list.addAll(userFeed.values().stream().toList());
+                        }
+                        if (subs.get(user) != null) {
+                            for (String u : subs.get(user)) {
+                                if (feeds.get(u) != null){
+                                    List<Message> messages = new ArrayList<>(feeds.get(u).values().stream().toList());
+                                    if(removed.get(u)!=null){
+                                        messages.removeIf(m -> removed.get(u).contains(m.getId()));
                                     }
+                                    list.addAll(messages);
                                 }
+
                             }
                         }
+                        if (removed.get(user) != null) list.removeIf(m -> removed.get(user).contains(m.getId()));
+                        return list;
                     }
-                    if (removed.get(user) != null) list.removeIf(m -> removed.get(user).contains(m.getId()));
-                    return list;
+
                 }
             }
-        }else{
-            URI uri = discovery.knownUrisOf(domainS,"feeds");
-            Result<List<Message>> r;
-            Feeds client = FeedsClientFactory.get(uri);
-            r = client.getMessages(user,0);
-            if(r.isOK()){
-                List<Message> listM = r.value();
-                return listM!=null ? listM : new ArrayList<Message>();
-            }
-
-        }
-        return new ArrayList<>();
     }
-
 
 
     @Override
@@ -226,19 +203,15 @@ public class JavaFeeds implements Feeds {
             Log.info("User or password dont match or exist");
             return Result.error(Result.ErrorCode.FORBIDDEN);
         }
-        synchronized (subs){
-            List<String> list = subs.get(user);
-            if(list==null){
-                list = new ArrayList<String>();
-                list.add(userSub);
-                subs.put(user,list);
-            }else{
-                if(!list.contains(userSub))
-                    list.add(userSub);
+        List<URI> uris = discovery.knownUrisOfList("feeds");
+        for (URI uri : uris) {
+            Feeds client = FeedsClientFactory.get(uri);
+            Result<Void> r = client.addSub(user,userSub);
+            if (!r.isOK()) {
+                return Result.error(Result.ErrorCode.BAD_REQUEST);
             }
-
-            return Result.ok();
         }
+        return Result.ok();
     }
 
     @Override
@@ -256,16 +229,15 @@ public class JavaFeeds implements Feeds {
             Log.info("User or password dont match or exist");
             return Result.error(Result.ErrorCode.FORBIDDEN);
         }
-        synchronized (subs){
-            List<String> list = subs.get(user);
-
-            if(list!=null) {
-                if (!list.remove(userSub)) {
-                    return Result.error(Result.ErrorCode.NOT_FOUND);
-                }
+        List<URI> uris = discovery.knownUrisOfList("feeds");
+        for (URI uri : uris) {
+            Feeds client = FeedsClientFactory.get(uri);
+            Result<Void> r = client.removeSub(user,userSub);
+            if (!r.isOK()) {
+                return Result.error(Result.ErrorCode.BAD_REQUEST);
             }
-            return Result.ok();
         }
+        return Result.ok();
     }
 
     @Override
@@ -339,21 +311,77 @@ public class JavaFeeds implements Feeds {
         String domain = path[1];
         String userID= path[0];
         URI uri = discovery.knownUrisOf(domain,"users");
-        //Log.info("Found uri: " + uri.toString());
         Result<List<User>> r;
-
         Users client = UsersClientFactory.get(uri);
         r = client.searchUsers(userID);
 
         List<User> users = r.value();
         if(r.isOK() && users!=null){
             for (User userC : users) {
-                //Log.info("Found user: " + userC.getName());
                 if(userC!=null && userC.getName().equals(userID))
                     return true;
             }
         }
         return false;
+    }
+
+    @Override
+    public Result<Void> postOutsideMessage(String user, Message msg) {
+        synchronized (feeds){
+            Log.info("Posting message");
+            HashMap<Long, Message> userFeed = feeds.get(user);
+            if(userFeed ==null){
+                userFeed= new HashMap<Long, Message>();
+                userFeed.put(msg.getId(), msg);
+                feeds.put(user, userFeed);
+            }else{
+                userFeed.put(msg.getId(), msg);
+            }
+
+        }
+        return Result.ok();
+    }
+
+    @Override
+    public Result<Void> removeUserMessage(String user, long mid) {
+        synchronized (removed) {
+            if (removed.get(user) != null) {
+                removed.get(user).add(mid);
+            } else {
+                List<Long> list = new ArrayList<>();
+                list.add(mid);
+                removed.put(user, list);
+            }
+        }
+        return Result.ok();
+    }
+
+    public Result<Void> addSub(String user,String userSub){
+        synchronized (subs){
+            List<String> list = subs.get(user);
+            if(list==null){
+                list = new ArrayList<String>();
+                list.add(userSub);
+                subs.put(user,list);
+            }else{
+                if(!list.contains(userSub))
+                    list.add(userSub);
+            }
+            return Result.ok();
+        }
+
+    }
+
+    public Result<Void> removeSub(String user,String userSub){
+        synchronized (subs){
+                List<String> list = subs.get(user);
+                if(list!=null) {
+                    if (!list.remove(userSub)) {
+                        return Result.error(Result.ErrorCode.NOT_FOUND);
+                    }
+                }
+            return Result.ok();
+        }
     }
 
 

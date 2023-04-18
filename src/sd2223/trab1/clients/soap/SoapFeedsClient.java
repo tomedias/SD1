@@ -75,4 +75,26 @@ public class SoapFeedsClient extends SoapClient implements Feeds {
     public Result<List<Message>> getPersonalFeeds(String user) {
         return super.reTry( () -> super.toJavaResult( () -> stub().getPersonalFeeds(user)) ) ;
     }
+
+    @Override
+    public Result<Void> postOutsideMessage(String user, Message msg) {
+        return super.reTry(()-> super.toJavaResult( () -> stub().postOutsideMessage(user, msg)) ) ;
+    }
+
+    @Override
+    public Result<Void> removeUserMessage(String user, long mid) {
+        return super.reTry(()-> super.toJavaResult( () -> stub().removeUserMessage(user, mid))) ;
+    }
+
+    @Override
+    public Result<Void> addSub(String user, String userSub) {
+        return super.reTry(()-> super.toJavaResult( () -> stub().addSub(user, userSub))) ;
+    }
+
+    @Override
+    public Result<Void> removeSub(String user, String userSub) {
+        return super.reTry(()-> super.toJavaResult( () -> stub().removeSub(user, userSub))) ;
+    }
+
+
 }

@@ -66,13 +66,12 @@ public class JavaUsers implements Users {
         synchronized (users){
             User user = users.get(name);
 
-            // Check if user exists
+
             if( user == null ) {
                 Log.info("User does not exist.");
                 return Result.error( Result.ErrorCode.NOT_FOUND);
             }
 
-            //Check if the password is correct
             if( !user.getPwd().equals( pwd)) {
                 Log.info("Password is incorrect.");
                 return Result.error( Result.ErrorCode.FORBIDDEN);
@@ -133,13 +132,11 @@ public class JavaUsers implements Users {
 
         synchronized (users){
             User user = users.get(name);
-            // Check if user exists
+
             if( user == null ) {
                 Log.info("User does not exist.");
                 return Result.error( Result.ErrorCode.NOT_FOUND);
             }
-
-            //Check if the password is correct
             if( !user.getPwd().equals( pwd)) {
                 Log.info("Password is incorrect.");
                 return Result.error( Result.ErrorCode.FORBIDDEN);

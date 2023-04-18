@@ -23,6 +23,12 @@ public interface Feeds {
     Result<Void> deleteFeed(String user);
 
     Result<List<Message>> getPersonalFeeds(String user);
+    Result<Void> postOutsideMessage(String user, Message msg);
+
+    Result<Void> removeUserMessage(String user, long mid);
+
+    Result<Void> addSub(String user,String userSub);
+    Result<Void> removeSub(String user,String userSub);
 
 
 
