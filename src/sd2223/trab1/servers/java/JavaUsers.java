@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 public class JavaUsers implements Users {
 
-    private static final Map<String,User> users = new HashMap<>();
+    private final Map<String,User> users = new HashMap<>();
 
     private static Logger Log = Logger.getLogger(JavaUsers.class.getName());
 

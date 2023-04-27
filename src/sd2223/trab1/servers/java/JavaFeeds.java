@@ -19,11 +19,11 @@ import java.util.logging.Logger;
 
 public class JavaFeeds implements Feeds {
 
-    private final static Map<String, HashMap<Long, Message>> feeds = new HashMap<String, HashMap<Long, Message>>();
+    private final Map<String, HashMap<Long, Message>> feeds = new HashMap<String, HashMap<Long, Message>>();
 
-    private final static Map<String,List<String>> subs  = new HashMap<String, List<String>>();
+    private final Map<String,List<String>> subs  = new HashMap<String, List<String>>();
 
-    private final static Map<String,List<Long>> removed = new HashMap<>();
+    private final Map<String,List<Long>> removed = new HashMap<>();
 
 
     protected static Logger Log = Logger.getLogger(JavaFeeds.class.getName());

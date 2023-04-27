@@ -39,7 +39,7 @@ public class RestFeedsServer {
                 Log.severe(e.getMessage());
             }
             ResourceConfig config = new ResourceConfig();
-            config.register(RestFeedsResource.class);
+            config.register(new RestFeedsResource());
 
             String ip = InetAddress.getLocalHost().getHostAddress();
             String serverURI = String.format(SERVER_URI_FMT, ip, PORT);
